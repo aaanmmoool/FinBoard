@@ -2,33 +2,62 @@
 
 A real-time finance monitoring dashboard built with Next.js, featuring customizable widgets, drag-and-drop functionality, and seamless financial API integrations.
 
-![FinBoard Dashboard](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
+![Zustand](https://img.shields.io/badge/Zustand-5-orange?style=flat-square)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat-square&logo=tailwindcss)
+
+---
+
+## 📸 Demo Screenshots
+
+### Dashboard Overview
+![Dashboard Overview](./docs/images/dashboard-overview.png)
+*Multiple widgets displaying crypto prices, forex rates, and charts with real-time updates*
+
+### Add Widget Modal
+![Add Widget Modal](./docs/images/add-widget-modal.png)
+*Connect to any API, test the connection, and select fields to display*
+
+### Connection Types
+![Connection Types](./docs/images/connection-types.png)
+*Choose between HTTP polling or WebSocket for live data*
+
+---
 
 ## ✨ Features
 
-### Widget System
-- **Stock Table**: Paginated table with search, filters, and watchlist management
-- **Watchlist**: Track your favorite stocks in real-time
-- **Market Gainers**: See top performing stocks of the day
-- **Performance Widget**: Detailed metrics for any stock
-- **Financial Data**: Company fundamentals and key metrics
-- **Line Chart**: Price trend visualization
-- **Candlestick Chart**: OHLC with volume bars
+### Core Widget System
+- **Card View**: Display key metrics like prices, rates, stats
+- **Table View**: Show time series data in tabular format
+- **Chart View**: Visualize price trends with interactive area charts
+- **Custom Fields**: Select specific data fields to display from any API
 
 ### Dashboard Features
-- 🔄 **Drag & Drop**: Easily rearrange widgets
-- ⚙️ **Configurable**: Customize each widget's settings
-- 🌙 **Dark/Light Mode**: Toggle between themes
+- 🔄 **Drag & Drop**: Easily rearrange widgets by dragging (using @dnd-kit)
+- 📌 **Pin Widgets**: Pin important widgets to keep them at the top (pinned widgets can't be moved)
+- 🌙 **Dark/Light Theme**: Toggle between themes with persistent preference
 - 💾 **Auto-Save**: All configurations persist in localStorage
-- 📤 **Export/Import**: Backup and restore your dashboard
+- 📥 **Templates**: Quick-start with pre-built Crypto and Forex templates
 
-### Technical Features
-- 📊 Real-time data from Alpha Vantage API
-- 🚀 Intelligent caching to minimize API calls
-- ⚡ Rate limiting to prevent API quota issues
-- 📱 Fully responsive design
+---
+
+## ⭐ Brownie Points Implemented
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| **State Management** | ✅ | Using **Zustand** for lightweight, performant state handling |
+| **Intelligent Caching** | ✅ | In-memory + localStorage caching with configurable TTL |
+| **Drag & Drop** | ✅ | Full drag-and-drop reordering with @dnd-kit |
+| **Theming** | ✅ | Dark/Light mode toggle with CSS variables |
+| **Widget Pinning** | ✅ | Pin widgets to prevent movement during drag |
+| **Request Deduplication** | ✅ | Prevents duplicate API calls for same resource |
+| **WebSocket Support** | ✅ | Live data option alongside HTTP polling |
+| **Responsive Design** | ✅ | Works on desktop, tablet, and mobile |
+| **TypeScript** | ✅ | Full type safety throughout the codebase |
+| **Validation** | ✅ | Form validation with inline error messages |
+
+---
 
 ## 🚀 Getting Started
 
@@ -48,19 +77,19 @@ cd finboard-app
 npm install
 ```
 
-3. Set up your API key:
-   - Get a free API key from [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
-   - Create a `.env.local` file in the root:
-```env
-NEXT_PUBLIC_ALPHA_VANTAGE_KEY=your_api_key_here
-```
-
-4. Start the development server:
+3. Start the development server:
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Using Free APIs (No API Key Required!)
+The app comes with templates that use **free APIs** that require no authentication:
+- **Coinbase API** - Crypto prices (BTC, ETH, LTC, SOL)
+- **ExchangeRate-API** - Forex rates (USD, EUR, INR, GBP)
+
+---
 
 ## 📁 Project Structure
 
@@ -68,57 +97,58 @@ npm run dev
 src/
 ├── app/                    # Next.js app router
 ├── components/
-│   ├── dashboard/          # Dashboard components
-│   ├── widgets/            # All widget types
-│   ├── ui/                 # Reusable UI components
-│   └── common/             # Loading/Error/Empty states
-├── hooks/                  # Custom React hooks
-├── store/                  # Zustand state stores
+│   ├── dashboard/          # Dashboard, WidgetCard, Modals
+│   └── ui/                 # Toast, ConfirmModal
+├── context/                # ThemeContext (dark/light mode)
+├── store/                  # Zustand store (dashboardStore)
 ├── services/
-│   ├── api/                # API client & caching
-│   └── storage/            # LocalStorage utilities
+│   ├── api/                # API utilities & caching
+│   ├── cacheService.ts     # Intelligent caching system
+│   └── websocketService.ts # WebSocket connection manager
 ├── types/                  # TypeScript definitions
-├── utils/                  # Helper functions
-└── config/                 # Configuration files
+└── utils/                  # Helpers, formatters, templates
 ```
+
+---
 
 ## 🛠 Tech Stack
 
 | Technology | Purpose |
 |------------|---------|
-| **Next.js 15** | React framework |
+| **Next.js 16** | React framework with App Router |
 | **TypeScript** | Type safety |
-| **Tailwind CSS** | Styling |
-| **Zustand** | State management |
-| **Recharts** | Data visualization |
-| **@dnd-kit** | Drag and drop |
-| **Axios** | HTTP client |
-| **Lucide React** | Icons |
+| **Zustand** | State management (lightweight alternative to Redux) |
+| **Tailwind CSS** | Utility-first styling |
+| **Recharts** | Data visualization (charts) |
+| **@dnd-kit** | Drag and drop functionality |
+| **Lucide React** | Beautiful icons |
 
-## 📊 API Configuration
+---
 
-### Alpha Vantage (Default)
-- Free tier: 25 requests/day, 5 requests/minute
-- Supports: quotes, time series, company overview, gainers/losers
+## 💡 Key Implementation Details
 
-### Rate Limiting
-The app automatically handles rate limiting:
-- Queues requests when limits are reached
-- Caches responses to minimize API calls
-- Shows appropriate loading states
+### State Management with Zustand
+```typescript
+const useDashboardStore = create<DashboardState>((set, get) => ({
+    widgets: [],
+    addWidget: (widget) => { ... },
+    removeWidget: (id) => { ... },
+    reorderWidgets: (activeId, overId) => { ... },
+}));
+```
 
-## 🎨 Customization
+### Intelligent Caching
+- **In-memory cache** with configurable TTL per API type
+- **Request deduplication** prevents duplicate concurrent requests
+- **localStorage persistence** for offline support
+- **Automatic cache invalidation** based on time
 
-### Adding New Widgets
-1. Create widget component in `src/components/widgets/`
-2. Add type to `src/types/widget.ts`
-3. Register in `src/config/widgetRegistry.ts`
-4. Add to renderer in `DashboardGrid.tsx`
+### Drag & Drop
+- Uses `@dnd-kit/core` and `@dnd-kit/sortable`
+- Pinned widgets are excluded from dragging
+- Visual feedback during drag operations
 
-### Theming
-CSS variables are defined in `globals.css`:
-- Light theme: `:root`
-- Dark theme: `[data-theme="dark"]`
+---
 
 ## 📜 Scripts
 
@@ -129,6 +159,8 @@ npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
 
+---
+
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
@@ -137,12 +169,15 @@ npm run build
 vercel
 ```
 
-### Environment Variables
-Set `NEXT_PUBLIC_ALPHA_VANTAGE_KEY` in your deployment environment.
+The app works out of the box with free APIs - no environment variables required!
+
+---
 
 ## 📝 License
 
 MIT License - feel free to use this project for learning or building your own finance dashboard!
+
+---
 
 ## 🤝 Contributing
 
