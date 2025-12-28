@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Plus, RefreshCw, Check, LayoutGrid, Table, BarChart3, Search, Wifi, Globe } from 'lucide-react';
+import { X, Plus, RefreshCw, Check, LayoutGrid, Table, BarChart3, Wifi, Globe, AlertCircle } from 'lucide-react';
 import { useDashboardStore } from '@/store';
 import { testApiUrl } from '@/services/api';
 import { AvailableField, DisplayMode, WidgetField, ConnectionType, Widget } from '@/types';
@@ -22,6 +22,7 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
     const [displayMode, setDisplayMode] = useState<DisplayMode>('card');
     const [searchQuery, setSearchQuery] = useState('');
     const [showArraysOnly, setShowArraysOnly] = useState(false);
+    const [showValidation, setShowValidation] = useState(false);
 
     const [isTesting, setIsTesting] = useState(false);
     const [testSuccess, setTestSuccess] = useState(false);
@@ -39,6 +40,7 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
             setSelectedFields(editWidget.selectedFields);
             setTestSuccess(true);
             setTestMessage('Widget loaded for editing');
+            setShowValidation(false);
         }
     }, [editWidget, isOpen]);
 
@@ -56,6 +58,15 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
 
         return fields;
     }, [availableFields, showArraysOnly, searchQuery]);
+
+    const validationErrors = useMemo(() => {
+        const errors: string[] = [];
+        if (!name.trim()) errors.push('Widget name is required');
+        if (!apiUrl.trim()) errors.push('API URL is required');
+        if (!testSuccess) errors.push('Please test the API connection first');
+        if (selectedFields.length === 0) errors.push('Select at least one field to display');
+        return errors;
+    }, [name, apiUrl, testSuccess, selectedFields]);
 
     const handleTest = async () => {
         if (!apiUrl.trim()) return;
@@ -96,7 +107,10 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
     };
 
     const handleSubmit = () => {
-        if (!name.trim() || !apiUrl.trim() || selectedFields.length === 0) return;
+        if (validationErrors.length > 0) {
+            setShowValidation(true);
+            return;
+        }
 
         const widgetData = {
             name: name.trim(),
@@ -113,6 +127,11 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
             addWidget(widgetData);
         }
 
+        resetForm();
+        onClose();
+    };
+
+    const resetForm = () => {
         setName('');
         setApiUrl('');
         setConnectionType('http');
@@ -124,21 +143,11 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
         setTestMessage('');
         setAvailableFields([]);
         setSelectedFields([]);
-
-        onClose();
+        setShowValidation(false);
     };
 
     const handleClose = () => {
-        setName('');
-        setApiUrl('');
-        setRefreshInterval('30');
-        setDisplayMode('card');
-        setSearchQuery('');
-        setShowArraysOnly(false);
-        setTestSuccess(false);
-        setTestMessage('');
-        setAvailableFields([]);
-        setSelectedFields([]);
+        resetForm();
         onClose();
     };
 
@@ -146,9 +155,23 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
 
     return (
         <div className="modal-backdrop" onClick={handleClose}>
-            <div className="modal-content animate-fadeIn" onClick={e => e.stopPropagation()}>
+            <div
+                className="modal-content animate-fadeIn"
+                onClick={e => e.stopPropagation()}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    maxHeight: '90vh',
+                    height: 'auto',
+                }}
+            >
                 <div
-                    style={{ padding: '12px 24px', textAlign: 'center', borderBottom: '1px solid var(--border-color)' }}
+                    style={{
+                        padding: '16px 24px',
+                        textAlign: 'center',
+                        borderBottom: '1px solid var(--border-color)',
+                        flexShrink: 0,
+                    }}
                 >
                     <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {editWidget ? 'Edit Widget' : 'Add New Widget'}
@@ -156,36 +179,56 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
                     <button
                         onClick={handleClose}
                         className="btn-ghost btn-icon"
-                        style={{ position: 'absolute', top: '10px', right: '12px' }}
+                        style={{ position: 'absolute', top: '12px', right: '12px' }}
                     >
                         <X size={18} />
                     </button>
                 </div>
 
-                <div style={{ padding: '16px 24px', maxHeight: '80vh', overflowY: 'auto' }}>
+                <div style={{
+                    padding: '20px 24px',
+                    overflowY: 'auto',
+                    flex: 1,
+                    minHeight: 0,
+                }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                                Widget Name
+                                Widget Name <span style={{ color: 'var(--danger)' }}>*</span>
                             </label>
                             <input
                                 type="text"
                                 className="input"
                                 placeholder="e.g., Bitcoin Price Tracker"
                                 value={name}
-                                onChange={e => setName(e.target.value)}
+                                onChange={e => {
+                                    setName(e.target.value);
+                                    if (showValidation) setShowValidation(false);
+                                }}
+                                style={showValidation && !name.trim() ? { borderColor: 'var(--danger)' } : {}}
                             />
+                            {showValidation && !name.trim() && (
+                                <p style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '4px' }}>
+                                    Widget name is required
+                                </p>
+                            )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-3">API URL</label>
+                            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                                API URL <span style={{ color: 'var(--danger)' }}>*</span>
+                            </label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
                                     className="input flex-1"
                                     placeholder="e.g., https://api.coinbase.com/v2/exchange-rates?currency=BTC"
                                     value={apiUrl}
-                                    onChange={e => setApiUrl(e.target.value)}
+                                    onChange={e => {
+                                        setApiUrl(e.target.value);
+                                        if (showValidation) setShowValidation(false);
+                                    }}
+                                    style={showValidation && !apiUrl.trim() ? { borderColor: 'var(--danger)' } : {}}
                                 />
                                 <button
                                     onClick={handleTest}
@@ -200,6 +243,11 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
                                     Test
                                 </button>
                             </div>
+                            {showValidation && !apiUrl.trim() && (
+                                <p style={{ color: 'var(--danger)', fontSize: '12px', marginTop: '4px' }}>
+                                    API URL is required
+                                </p>
+                            )}
                         </div>
 
                         {testSuccess && testMessage && (
@@ -251,7 +299,9 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
                         {testSuccess && availableFields.length > 0 && (
                             <>
                                 <div>
-                                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Select Fields to Display</label>
+                                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                                        Select Fields to Display <span style={{ color: 'var(--danger)' }}>*</span>
+                                    </label>
                                     <p className="text-xs text-[var(--text-muted)] mb-3">Display Mode</p>
                                     <div className="flex gap-2">
                                         <button
@@ -287,7 +337,7 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
                                             fontSize: '12px',
                                             color: 'var(--text-primary)',
                                         }}>
-                                            ⚠️ <strong>Chart mode:</strong> Select only <strong>one</strong> time series field (e.g., "Time Series (Daily)"). Selecting multiple fields will not work.
+                                            ⚠️ <strong>Chart mode:</strong> Select only <strong>one</strong> time series field (e.g., "Time Series (Daily)").
                                         </div>
                                     )}
                                 </div>
@@ -315,7 +365,7 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
 
                                 <div>
                                     <label className="block text-sm text-[var(--text-secondary)] mb-1.5">Available Fields</label>
-                                    <div className="max-h-48 overflow-y-auto space-y-2">
+                                    <div className="max-h-40 overflow-y-auto space-y-2">
                                         {filteredFields.slice(0, 20).map((field) => (
                                             <div
                                                 key={field.path}
@@ -366,23 +416,65 @@ export function AddWidgetModal({ isOpen, onClose, editWidget }: AddWidgetModalPr
                                         </div>
                                     </div>
                                 )}
+
+                                {showValidation && selectedFields.length === 0 && (
+                                    <p style={{ color: 'var(--danger)', fontSize: '12px' }}>
+                                        Please select at least one field to display
+                                    </p>
+                                )}
                             </>
+                        )}
+
+                        {showValidation && !testSuccess && apiUrl.trim() && (
+                            <div style={{
+                                padding: '12px',
+                                background: 'var(--danger-light)',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                            }}>
+                                <AlertCircle size={16} style={{ color: 'var(--danger)' }} />
+                                <span style={{ fontSize: '13px', color: 'var(--danger)' }}>
+                                    Please test the API connection before adding the widget
+                                </span>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                <div style={{ padding: '12px 24px', borderTop: '1px solid var(--border-color)', background: 'var(--bg-input)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                    <button onClick={handleClose} className="btn btn-secondary" style={{ padding: '10px 24px' }}>
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!name.trim() || !apiUrl.trim() || selectedFields.length === 0}
-                        className="btn btn-primary"
-                        style={{ padding: '10px 24px' }}
-                    >
-                        {editWidget ? 'Save Changes' : 'Add Widget'}
-                    </button>
+                <div style={{
+                    padding: '16px 24px',
+                    borderTop: '1px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    flexShrink: 0,
+                    borderRadius: '0 0 16px 16px',
+                }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        {validationErrors.length > 0 && showValidation ? (
+                            <span style={{ color: 'var(--danger)' }}>
+                                {validationErrors.length} issue{validationErrors.length > 1 ? 's' : ''} to fix
+                            </span>
+                        ) : (
+                            <span>* Required fields</span>
+                        )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button onClick={handleClose} className="btn btn-secondary" style={{ padding: '10px 24px' }}>
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            className="btn btn-primary"
+                            style={{ padding: '10px 24px' }}
+                        >
+                            {editWidget ? 'Save Changes' : 'Add Widget'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
