@@ -11,6 +11,7 @@ interface DashboardState {
     addWidget: (widget: Omit<Widget, 'id'>) => void;
     removeWidget: (id: string) => void;
     updateWidget: (id: string, updates: Partial<Widget>) => void;
+    togglePin: (id: string) => void;
     updateWidgetData: (id: string, data: unknown, lastUpdated: string) => void;
     setWidgetLoading: (id: string, isLoading: boolean) => void;
     setWidgetError: (id: string, error: string | null) => void;
@@ -52,6 +53,30 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
                 w.id === id ? { ...w, ...updates } : w
             ),
         }));
+        get().saveToStorage();
+    },
+
+    togglePin: (id: string) => {
+        set((state) => {
+            const widgetIndex = state.widgets.findIndex((w) => w.id === id);
+            if (widgetIndex === -1) return state;
+
+            const widget = state.widgets[widgetIndex];
+            const newWidgets = [...state.widgets];
+            const isPinning = !widget.isPinned;
+
+            newWidgets.splice(widgetIndex, 1);
+
+            if (isPinning) {
+                newWidgets.unshift({ ...widget, isPinned: true });
+            } else {
+                const lastPinnedIndex = newWidgets.findIndex((w) => !w.isPinned);
+                const insertIndex = lastPinnedIndex === -1 ? newWidgets.length : lastPinnedIndex;
+                newWidgets.splice(insertIndex, 0, { ...widget, isPinned: false });
+            }
+
+            return { widgets: newWidgets };
+        });
         get().saveToStorage();
     },
 

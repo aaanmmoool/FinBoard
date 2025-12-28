@@ -24,7 +24,7 @@ interface WidgetCardProps {
 }
 
 export function WidgetCard({ widget, onEdit }: WidgetCardProps) {
-    const { updateWidgetData, setWidgetLoading, setWidgetError, removeWidget, updateWidget } = useDashboardStore();
+    const { updateWidgetData, setWidgetLoading, setWidgetError, removeWidget, updateWidget, togglePin } = useDashboardStore();
     const [socketStatus, setSocketStatus] = useState<ConnectionStatus>('disconnected');
     const { toast } = useToast();
 
@@ -108,7 +108,7 @@ export function WidgetCard({ widget, onEdit }: WidgetCardProps) {
     };
 
     const handlePin = () => {
-        updateWidget(widget.id, { isPinned: !widget.isPinned });
+        togglePin(widget.id);
     };
 
     const handleSettings = () => {
